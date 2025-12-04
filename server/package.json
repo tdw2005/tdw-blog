@@ -1,0 +1,35 @@
+{
+  "name": "server",
+  "version": "2.2.5",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon index.js",
+    "build": "echo 'Server build complete'",
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@vue/server-renderer": "^3.5.25",
+    "axios": "^1.13.2",
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.5",
+    "dompurify": "^3.3.0",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "marked": "^17.0.1",
+    "mysql2": "^3.15.3",
+    "puppeteer": "^23.8.0",
+    "redis": "^4.6.7",
+    "vue": "^3.5.25",
+    "vue-router": "^4.6.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.11"
+  }
+}
