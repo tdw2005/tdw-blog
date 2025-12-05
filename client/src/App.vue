@@ -41,6 +41,7 @@ import { useDarkMode } from './composables/useDarkMode'
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuth } from './composables/useAuth'
+import { apiFetch } from './composables/useApi'
 import AuthModal from './components/AuthModal.vue'
 
 export default {
@@ -55,8 +56,6 @@ export default {
     const router = useRouter()
     const unreadCount = ref(0)
     let poller = null
-    const token = () => localStorage.getItem('token') || ''
-    const API_BASE = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '')
 
     const handleDocumentClick = (e) => {
       const el = dropdownRef.value
@@ -88,7 +87,7 @@ export default {
     const fetchUnread = async () => {
       if (!isLoggedIn.value) { unreadCount.value = 0; return }
       try {
-        const res = await fetch(`${API_BASE}/api/notifications/unread-count`, { headers: { Authorization: `Bearer ${token()}` } })
+        const res = await apiFetch('/api/notifications/unread-count')
         const result = await res.json()
         if (result.success) unreadCount.value = result.data.unread || 0
       } catch {}

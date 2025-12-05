@@ -117,6 +117,7 @@ import ArticleComments from './ArticleComments.vue'
 import ArticleExport from './ArticleExport.vue'
 import RelatedArticles from './RelatedArticles.vue'
 import { useAuth } from '../composables/useAuth'
+import { apiFetch } from '../composables/useApi'
 
 export default {
   name: 'ArticleDetail',
@@ -179,7 +180,7 @@ export default {
       try {
         loading.value = true
         
-        const response = await fetch(`${API_BASE}/api/articles/${articleId.value}`)
+        const response = await apiFetch(`/api/articles/${articleId.value}`)
         const result = await response.json()
         
         if (result.success) {
@@ -255,11 +256,10 @@ export default {
       }
 
       try {
-        const response = await fetch(`${API_BASE}/api/articles/${articleId.value}`, {
+        const response = await apiFetch(`/api/articles/${articleId.value}`, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('token') || ''}`
           }
         })
         const result = await response.json()
@@ -291,7 +291,7 @@ export default {
     const toggleLikeArticle = async () => {
       if (!isLoggedIn.value) { openAuthModal('prompt'); return }
       try {
-        const res = await fetch(`${API_BASE}/api/articles/${articleId.value}/like`, { method: 'POST', headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` } })
+        const res = await apiFetch(`/api/articles/${articleId.value}/like`, { method: 'POST' })
         const result = await res.json()
         if (result.success) {
           article.value.like_count = result.data.like_count

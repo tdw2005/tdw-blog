@@ -79,6 +79,7 @@
 import { ref, onMounted, computed, inject } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
+import { apiFetch } from '../composables/useApi'
 
 export default {
   name: 'Notifications',
@@ -101,8 +102,7 @@ export default {
       return items.value.filter(n => n.type === 'comment' || n.type === 'reply')
     })
 
-    const token = () => localStorage.getItem('token') || ''
-    const API_BASE = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '')
+    
 
     const injected = inject('initialData', null)
     const checkSSRData = () => {
@@ -125,7 +125,7 @@ export default {
 
     const fetchUnread = async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/notifications/unread-count`, { headers: { Authorization: `Bearer ${token()}` } })
+        const res = await apiFetch('/api/notifications/unread-count')
         const result = await res.json()
         if (result.success) unread.value = result.data.unread
       } catch {}
@@ -133,7 +133,7 @@ export default {
 
     const fetchUnreadByType = async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/notifications/unread-counts`, { headers: { Authorization: `Bearer ${token()}` } })
+        const res = await apiFetch('/api/notifications/unread-counts')
         const result = await res.json()
         if (result.success && result.data) {
           likesUnread.value = (result.data.article_like || 0) + (result.data.comment_like || 0)
@@ -147,7 +147,7 @@ export default {
       loading.value = true
       try {
         const params = new URLSearchParams({ page: String(page), limit: String(pagination.value.limit) })
-        const res = await fetch(`${API_BASE}/api/notifications?${params.toString()}`, { headers: { Authorization: `Bearer ${token()}` } })
+        const res = await apiFetch(`/api/notifications?${params.toString()}`)
         const result = await res.json()
         if (result.success) {
           items.value = result.data.notifications || []
@@ -175,9 +175,9 @@ export default {
 
     const markRead = async (id) => {
       try {
-        const res = await fetch(`${API_BASE}/api/notifications/mark-read`, {
+        const res = await apiFetch('/api/notifications/mark-read', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ ids: [id] })
         })
         const r = await res.json()
@@ -196,9 +196,9 @@ export default {
       const ids = items.value.filter(n => types.includes(n.type) && !n.read).map(n => n.id)
       if (ids.length === 0) return
       try {
-        const res = await fetch(`${API_BASE}/api/notifications/mark-read`, {
+        const res = await apiFetch('/api/notifications/mark-read', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ ids })
         })
         const r = await res.json()
@@ -227,7 +227,7 @@ export default {
       if (markingAll.value) return
       markingAll.value = true
       try {
-        const res = await fetch(`${API_BASE}/api/notifications/mark-all-read`, { method: 'POST', headers: { Authorization: `Bearer ${token()}` } })
+        const res = await apiFetch('/api/notifications/mark-all-read', { method: 'POST' })
         const r = await res.json()
         if (r.success) {
           items.value.forEach(x => x.read = 1)
@@ -262,22 +262,22 @@ export default {
       const tasks = items.value.map(async (n) => {
         try {
           if (n.type === 'article_like' && n.article_id) {
-            const res = await fetch(`${API_BASE}/api/articles/${n.article_id}`, { headers: { Authorization: `Bearer ${token()}` } })
+            const res = await apiFetch(`/api/articles/${n.article_id}`)
             const r = await res.json()
             if (r.success && r.data) n.current_like_count = r.data.like_count
           } else if (n.type === 'comment_like' && n.comment_id) {
-            const res = await fetch(`${API_BASE}/api/comments/${n.comment_id}`, { headers: { Authorization: `Bearer ${token()}` } })
+            const res = await apiFetch(`/api/comments/${n.comment_id}`)
             const r = await res.json()
             if (r.success && r.data) n.current_like_count = r.data.like_count
           } else if ((n.type === 'comment' || n.type === 'reply') && n.comment_id) {
-            const res = await fetch(`${API_BASE}/api/comments/${n.comment_id}`, { headers: { Authorization: `Bearer ${token()}` } })
+            const res = await apiFetch(`/api/comments/${n.comment_id}`)
             const r = await res.json()
             if (r.success && r.data) {
               n.current_like_count = r.data.like_count
               n.reply_count = r.data.reply_count
               n.liked_by_current_user = !!r.data.liked_by_current_user
               if (n.type === 'reply' && r.data.parent_id) {
-                const p = await fetch(`${API_BASE}/api/comments/${r.data.parent_id}`, { headers: { Authorization: `Bearer ${token()}` } })
+                const p = await apiFetch(`/api/comments/${r.data.parent_id}`)
                 const pr = await p.json()
                 if (pr.success && pr.data && pr.data.content) {
                   n.parent_excerpt = String(pr.data.content).slice(0, 120)
@@ -297,7 +297,7 @@ export default {
       if (!id) return
       if (!isLoggedIn.value) { openAuthModal('prompt'); return }
       try {
-        const res = await fetch(`${API_BASE}/api/comments/${id}/like`, { method: 'POST', headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` } })
+        const res = await apiFetch(`/api/comments/${id}/like`, { method: 'POST' })
         const r = await res.json()
         if (r.success) {
           n.current_like_count = r.data.like_count
@@ -319,9 +319,9 @@ export default {
       if (!content) { alert('请填写回复内容'); return }
       replySubmitting.value[n.id] = true
       try {
-        const res = await fetch(`${API_BASE}/api/articles/${n.article_id}/comments`, {
+        const res = await apiFetch(`/api/articles/${n.article_id}/comments`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token') || ''}` },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ content, parent_id: n.comment_id })
         })
         const r = await res.json()

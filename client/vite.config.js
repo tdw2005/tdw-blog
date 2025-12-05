@@ -1,12 +1,8 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
-const repo = process.env.GITHUB_REPOSITORY?.split('/')?.pop() || ''
-const isUserOrg = repo.endsWith('.github.io')
-const base = isUserOrg ? '/' : (repo ? `/${repo}/` : '/')
-
 export default defineConfig({
-    base,
+    base: process.env.VITE_BASE_PATH || '/',
     plugins: [vue()],
     server: {
         port: 3001,
@@ -16,7 +12,7 @@ export default defineConfig({
                 changeOrigin: true
             }
         },
-        cors: true
+        cors: true // 开启CORS
     },
     build: {
         outDir: 'dist'

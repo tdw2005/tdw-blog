@@ -4,17 +4,15 @@ const crypto = require('crypto');
 const { checkDatabaseHealth, checkRedisHealth } = require('../fallback-utils');
 
 function registerSystemRoutes(app, { pool, redisClient, authenticateJWT, withFallback, clearRelatedCaches }) {
-  // 轻量级健康检查（用于部署健康检查，始终快速返回 200）
-  app.get('/healthz', (req, res) => {
-    res.status(200).send('ok');
-  });
-
   app.get('/api/health', async (req, res) => {
     try {
-      const status = req.serviceStatus || { database: true, redis: true };
-      res.json({ success: true, data: { database: status.database ? 'healthy' : 'unhealthy', redis: status.redis ? 'healthy' : 'unhealthy', timestamp: new Date().toISOString(), uptime: process.uptime() } });
+      const [dbHealth, redisHealth] = await Promise.all([
+        checkDatabaseHealth(pool),
+        checkRedisHealth(redisClient)
+      ]);
+      res.json({ success: true, data: { database: dbHealth ? 'healthy' : 'unhealthy', redis: redisHealth ? 'healthy' : 'unhealthy', timestamp: new Date().toISOString(), uptime: process.uptime() } });
     } catch (error) {
-      res.json({ success: true, data: { database: 'unknown', redis: 'unknown', timestamp: new Date().toISOString() } });
+      res.json({ success: false, data: { database: 'unknown', redis: 'unknown', timestamp: new Date().toISOString(), error: error.message } });
     }
   });
 

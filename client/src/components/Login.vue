@@ -46,6 +46,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
+import { apiFetch } from '../composables/useApi'
 
 export default {
   name: 'Login',
@@ -54,7 +55,6 @@ export default {
     const submitting = ref(false)
     const form = ref({ id: '', password: '', remember: false, showPassword: false })
     const { openAuthModal } = useAuth()
-    const API_BASE = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '')
 
     onMounted(() => {
       openAuthModal('login')
@@ -74,7 +74,7 @@ export default {
       }
       submitting.value = true
       try {
-        const res = await fetch(`${API_BASE}/api/auth/login`, {
+        const res = await apiFetch('/api/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id: form.value.id, password: form.value.password })
@@ -104,6 +104,7 @@ export default {
       }
     }
 
+    const openAuth = (mode) => openAuthModal(mode)
     return { form, submitting, submit, openAuth }
   }
 }
@@ -152,4 +153,3 @@ export default {
   cursor: pointer;
 }
 </style>
-    const openAuth = (mode) => openAuthModal(mode)

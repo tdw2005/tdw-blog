@@ -236,6 +236,7 @@
 import { ref, onMounted, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
+import { apiFetch } from '../composables/useApi'
 
 export default {
   name: 'ArticleComments',
@@ -275,7 +276,7 @@ export default {
 
     const fetchCommentStats = async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/articles/${props.articleId}/comments/stats`)
+        const res = await apiFetch(`/api/articles/${props.articleId}/comments/stats`)
         const r = await res.json()
         if (r.success && r.data && typeof r.data.total !== 'undefined') {
           totalComments.value = r.data.total
@@ -291,11 +292,7 @@ export default {
           limit: pagination.value.limit.toString(),
           sort: sortBy.value
         })
-
-        const headers = {}
-        const t = localStorage.getItem('token')
-        if (t) headers['Authorization'] = `Bearer ${t}`
-        const response = await fetch(`${API_BASE}/api/articles/${props.articleId}/comments?${params}`, { headers })
+        const response = await apiFetch(`/api/articles/${props.articleId}/comments?${params}`)
         const result = await response.json()
 
         if (result.success) {
@@ -342,11 +339,10 @@ export default {
 
       submitting.value = true
       try {
-        const response = await fetch(`${API_BASE}/api/articles/${props.articleId}/comments`, {
+        const response = await apiFetch(`/api/articles/${props.articleId}/comments`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('token') || ''}`
           },
           body: JSON.stringify({
             content: form.value.content
@@ -379,12 +375,10 @@ export default {
 
       submittingReply.value = true
       try {
-        // 提交回复 - 明确发送 parent_id
-        const response = await fetch(`${API_BASE}/api/articles/${props.articleId}/comments`, {
+        const response = await apiFetch(`/api/articles/${props.articleId}/comments`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('token') || ''}`
           },
           body: JSON.stringify({
             content: replyForm.value.content,
@@ -395,27 +389,24 @@ export default {
         const result = await response.json()
         
         if (result.success) {
-          // 优化用户体验：立即将新回复添加到对应的评论中
           const newReply = result.data
-          // 找到所属主评论：如果回复的是主评论，直接命中；否则查找其所在的主评论
-          let targetComment = comments.value.find(c => c.id === newReply.parent_id)
+          const pid = (newReply && typeof newReply.parent_id !== 'undefined') ? newReply.parent_id : parentId
+          const list = Array.isArray(comments.value) ? comments.value : []
+          let targetComment = list.find(c => c && c.id === pid)
           if (!targetComment) {
-            targetComment = comments.value.find(c => (c.replies || []).some(r => r.id === newReply.parent_id))
+            targetComment = list.find(c => Array.isArray(c?.replies) && c.replies.some(r => r && r.id === pid))
           }
           if (targetComment) {
-            if (!targetComment.replies) targetComment.replies = []
-            targetComment.replies.push(newReply)
-            // 更新该主评论的可见回复数（新增后至少显示当前数量）
+            if (!Array.isArray(targetComment.replies)) targetComment.replies = []
+            targetComment.replies.push({ ...newReply, parent_id: pid })
             const current = repliesVisibleCount.value[targetComment.id] || 0
             repliesVisibleCount.value[targetComment.id] = Math.min(current + 1, targetComment.replies.length)
+          } else {
+            fetchComments(pagination.value.page || 1)
           }
-          
           replyForm.value = { content: '' }
           replyingTo.value = null
           totalComments.value = (totalComments.value || 0) + 1
-          
-          // 移除自动刷新，让回复持续显示在界面上
-          // 用户可以通过分页或手动刷新获取最新数据
         } else {
           alert('回复失败: ' + result.message)
         }
@@ -498,7 +489,7 @@ export default {
       if (!canDeleteComment(c)) { openAuthModal('prompt'); return }
       if (!confirm('确定删除该评论/回复吗？')) return
       try {
-        const res = await fetch(`${API_BASE}/api/comments/${c.id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` } })
+        const res = await apiFetch(`/api/comments/${c.id}`, { method: 'DELETE' })
         const result = await res.json()
         if (result.success) {
           // 从本地移除
@@ -524,7 +515,7 @@ export default {
     const toggleLike = async (c) => {
       if (!isLoggedIn.value) { openAuthModal('prompt'); return }
       try {
-        const res = await fetch(`${API_BASE}/api/comments/${c.id}/like`, { method: 'POST', headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` } })
+        const res = await apiFetch(`/api/comments/${c.id}/like`, { method: 'POST' })
         const result = await res.json()
         if (result.success) {
           c.like_count = result.data.like_count
@@ -901,6 +892,6 @@ export default {
     padding: 1rem;
   }
 }
+</style>
 .comment-item.highlight-blink, .reply-item.highlight-blink { animation: blink-highlight 0.8s ease-in-out 2; }
 @keyframes blink-highlight { 0% { background-color: rgba(255, 230, 150, 0.4); } 50% { background-color: rgba(255, 230, 150, 0.0); } 100% { background-color: rgba(255, 230, 150, 0.4); } }
-</style>

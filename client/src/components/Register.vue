@@ -43,6 +43,7 @@
 <script>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { apiFetch } from '../composables/useApi'
 
 export default {
   name: 'Register',
@@ -51,7 +52,6 @@ export default {
     const submitting = ref(false)
     const form = ref({ nickname: '', id: '', password: '' })
     const nicknameError = ref('')
-    const API_BASE = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '')
 
     const validateNickname = () => {
       nicknameError.value = form.value.nickname === '管理员' ? '昵称不可为“管理员”' : ''
@@ -69,7 +69,7 @@ export default {
       }
       submitting.value = true
       try {
-        const res = await fetch(`${API_BASE}/api/auth/register`, {
+        const res = await apiFetch('/api/auth/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id: form.value.id, nickname: form.value.nickname, password: form.value.password })

@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const puppeteer = require('puppeteer');
 const mysql = require('mysql2/promise');
 const cors = require('cors');
 const path = require('path');
@@ -49,10 +50,33 @@ const authenticateJWT = createAuthenticateJWT(JWT_SECRET);
 app.disable('x-powered-by');
 app.set('trust proxy', 1);
 
+// CORS 配置：支持逗号分隔的多来源；在生产环境严格白名单
 const allowOrigins = process.env.NODE_ENV === 'production'
-  ? (process.env.CORS_ORIGIN ? [process.env.CORS_ORIGIN] : [])
+  ? (process.env.CORS_ORIGIN
+      ? String(process.env.CORS_ORIGIN)
+          .split(',')
+          .map(s => s.trim())
+          .filter(Boolean)
+      : [])
   : ['http://localhost:3000', 'http://localhost:3001'];
-app.use(cors({ origin: allowOrigins.length > 0 ? allowOrigins : true, credentials: true }));
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    // 允许无来源（同源或服务器端调用）
+    if (!origin) return callback(null, true);
+    // 白名单为空 → 允许所有（例如未配置生产白名单时）
+    if (allowOrigins.length === 0) return callback(null, true);
+    // 精确匹配来源
+    const allowed = allowOrigins.includes(origin);
+    return callback(allowed ? null : new Error('Not allowed by CORS'), allowed);
+  },
+  credentials: true,
+  methods: ['GET','HEAD','PUT','PATCH','POST','DELETE','OPTIONS'],
+  allowedHeaders: ['Content-Type','Authorization'],
+  exposedHeaders: ['ETag']
+};
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 app.use((req, res, next) => {
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('X-Frame-Options', 'SAMEORIGIN');

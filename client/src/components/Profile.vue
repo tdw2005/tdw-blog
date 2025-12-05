@@ -88,6 +88,7 @@
 import { ref, onMounted, inject } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
+import { apiFetch } from '../composables/useApi'
 
 export default {
   name: 'Profile',
@@ -101,8 +102,6 @@ export default {
     const confirmPassword = ref('')
     const submittingPassword = ref(false)
 
-    const token = () => localStorage.getItem('token') || ''
-    const API_BASE = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '')
     const myArticles = ref([])
     const loadingArticles = ref(true)
     const myDrafts = ref([])
@@ -129,9 +128,7 @@ export default {
       const hasSSR = checkSSRData()
       if (hasSSR) return
       try {
-        const res = await fetch(`${API_BASE}/api/auth/me`, {
-          headers: { Authorization: `Bearer ${token()}` }
-        })
+        const res = await apiFetch('/api/auth/me')
         const result = await res.json()
         if (result.success) {
           nickname.value = result.data.nickname || ''
@@ -142,7 +139,7 @@ export default {
       try {
         const authorId = meUserId.value || (user.value?.user_id || '')
         const qs = new URLSearchParams({ page: '1', limit: '10', author: authorId })
-        const res2 = await fetch(`${API_BASE}/api/articles?${qs.toString()}`)
+        const res2 = await apiFetch(`/api/articles?${qs.toString()}`)
         const r2 = await res2.json()
         if (r2.success) {
           myArticles.value = r2.data?.articles || []
@@ -152,7 +149,7 @@ export default {
 
       try {
         const qs3 = new URLSearchParams({ page: '1', limit: '10', scope: 'mine' })
-        const res3 = await fetch(`${API_BASE}/api/drafts?${qs3.toString()}`, { headers: { Authorization: `Bearer ${token()}` } })
+        const res3 = await apiFetch(`/api/drafts?${qs3.toString()}`)
         const r3 = await res3.json()
         if (r3.success) {
           myDrafts.value = r3.data?.drafts || []
@@ -169,11 +166,10 @@ export default {
       }
       submittingNickname.value = true
       try {
-        const res = await fetch(`${API_BASE}/api/auth/profile`, {
+        const res = await apiFetch('/api/auth/profile', {
           method: 'PUT',
           headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token()}`
+            'Content-Type': 'application/json'
           },
           body: JSON.stringify({ nickname: nickname.value })
         })
@@ -208,11 +204,10 @@ export default {
       }
       submittingPassword.value = true
       try {
-        const res = await fetch(`${API_BASE}/api/auth/password`, {
+        const res = await apiFetch('/api/auth/password', {
           method: 'PUT',
           headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token()}`
+            'Content-Type': 'application/json'
           },
           body: JSON.stringify({ oldPassword: oldPassword.value, newPassword: newPassword.value })
         })

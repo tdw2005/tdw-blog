@@ -208,6 +208,7 @@ import { useRoute, useRouter } from 'vue-router'
 import AIWritingAssistant from './AIWritingAssistant.vue'
 import MarkdownEditor from './MarkdownEditor.vue'
 import { useAuth } from '../composables/useAuth'
+import { apiFetch } from '../composables/useApi'
 
 export default {
   name: 'ArticleForm',
@@ -299,15 +300,13 @@ export default {
       router.go(-1)
     }
 
-    const token = () => localStorage.getItem('token') || ''
-    const API_BASE = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '')
     const openDraftPicker = async () => {
       if (!isLoggedIn.value) { openAuthModal('prompt'); return }
       showDraftPicker.value = true
       loadingDrafts.value = true
       try {
         const qs = new URLSearchParams({ page: '1', limit: '20', scope: 'mine' })
-        const res = await fetch(`${API_BASE}/api/drafts?${qs.toString()}`, { headers: { Authorization: `Bearer ${token()}` } })
+        const res = await apiFetch(`/api/drafts?${qs.toString()}`)
         const r = await res.json()
         drafts.value = r.success ? (r.data?.drafts || []) : []
       } finally {
@@ -323,7 +322,7 @@ export default {
       
       try {
         loading.value = true
-        const response = await fetch(`${API_BASE}/api/articles/${articleId.value}`)
+        const response = await apiFetch(`/api/articles/${articleId.value}`)
         const result = await response.json()
         
         if (result.success) {
@@ -389,8 +388,8 @@ export default {
       submitting.value = true
       try {
         const url = isEditMode.value 
-          ? `${API_BASE}/api/articles/${articleId.value}`
-          : `${API_BASE}/api/articles`
+          ? `/api/articles/${articleId.value}`
+          : '/api/articles'
         
         const method = isEditMode.value ? 'PUT' : 'POST'
         const bodyData = {
@@ -399,11 +398,10 @@ export default {
           status: isEditMode.value ? (form.status === 'draft' ? 'published' : form.status) : 'published'
         }
 
-        const response = await fetch(url, {
+        const response = await apiFetch(url, {
           method,
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('token') || ''}`
           },
           body: JSON.stringify(bodyData)
         })
@@ -445,11 +443,10 @@ export default {
 
       submitting.value = true
       try {
-        const response = await fetch(`${API_BASE}/api/articles`, {
+        const response = await apiFetch('/api/articles', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('token') || ''}`
           },
           body: JSON.stringify({
             ...form,
@@ -484,11 +481,10 @@ export default {
 
       submitting.value = true
       try {
-        const response = await fetch(`${API_BASE}/api/articles/${articleId.value}` , {
+        const response = await apiFetch(`/api/articles/${articleId.value}` , {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('token') || ''}`
           },
           body: JSON.stringify({
             ...form,

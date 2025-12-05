@@ -286,6 +286,7 @@ import { ref, onMounted, watch, computed, inject } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import TagCloud from './TagCloud.vue'
 import { useAuth } from '../composables/useAuth'
+import { apiFetch } from '../composables/useApi'
 
 export default {
   name: 'ArticleList',
@@ -314,8 +315,6 @@ export default {
     const route = useRoute()
     const router = useRouter()
 
-    const token = () => localStorage.getItem('token') || ''
-    const API_BASE = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '')
     const showBackup = ref(false)
     const backups = ref([])
     const backupLoading = ref(false)
@@ -334,7 +333,7 @@ export default {
 
     const fetchBackups = async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/backup/list`, { headers: { Authorization: `Bearer ${token()}` } })
+        const res = await apiFetch('/api/backup/list')
         const data = await res.json()
         backups.value = Array.isArray(data.data) ? data.data : []
       } catch {}
@@ -343,7 +342,7 @@ export default {
     const createBackup = async () => {
       backupLoading.value = true
       try {
-        const res = await fetch(`${API_BASE}/api/backup/create`, { method: 'POST', headers: { Authorization: `Bearer ${token()}` } })
+        const res = await apiFetch('/api/backup/create', { method: 'POST' })
         const r = await res.json()
         if (r.success && r.data && r.data.backupId) {
           await fetchBackups()
@@ -360,7 +359,7 @@ export default {
 
     const downloadBackup = async (id) => {
       try {
-        const res = await fetch(`${API_BASE}/api/backup/download/${id}`, { headers: { Authorization: `Bearer ${token()}` } })
+        const res = await apiFetch(`/api/backup/download/${id}`)
         const blob = await res.blob()
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
@@ -376,7 +375,7 @@ export default {
     const deleteBackup = async (id) => {
       if (!confirm('确定删除该备份吗？')) return
       try {
-        const res = await fetch(`${API_BASE}/api/backup/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token()}` } })
+        const res = await apiFetch(`/api/backup/${id}`, { method: 'DELETE' })
         const r = await res.json()
         if (r.success) { await fetchBackups(); } else { alert(r.message || '删除失败') }
       } catch {}
@@ -393,9 +392,9 @@ export default {
       try {
         const text = await selectedFile.value.text()
         const json = JSON.parse(text)
-        const res = await fetch(`${API_BASE}/api/backup/import`, {
+        const res = await apiFetch('/api/backup/import', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(json)
         })
         const r = await res.json()
@@ -431,7 +430,7 @@ export default {
 
     const fetchGlobalTags = async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/tags`)
+        const res = await apiFetch('/api/tags')
         const data = await res.json()
         if (data && data.success && data.data && Array.isArray(data.data.tags)) {
           globalTagNames.value = data.data.tags.map(t => t.name)
@@ -459,7 +458,7 @@ export default {
         params.append('sortBy', sortField.value)
         params.append('sortOrder', sortOrder.value)
 
-        const response = await fetch(`${API_BASE}/api/articles?${params}`)
+        const response = await apiFetch(`/api/articles?${params}`)
         const result = await response.json()
         
         if (result.success) {
@@ -617,10 +616,7 @@ export default {
     }
 
     try {
-        const response = await fetch(`${API_BASE}/api/articles/${id}`, {
-            method: 'DELETE',
-            headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` }
-        })
+        const response = await apiFetch(`/api/articles/${id}`, { method: 'DELETE' })
         const result = await response.json()
 
         if (result.success) {
@@ -645,12 +641,9 @@ export default {
     }
 
     try {
-        const res = await fetch(`${API_BASE}/api/articles/batch-delete`, {
+        const res = await apiFetch('/api/articles/batch-delete', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('token') || ''}`
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ ids: selectedArticles.value })
         })
         const result = await res.json()

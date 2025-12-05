@@ -83,6 +83,7 @@
 <script>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { apiFetch } from '../composables/useApi'
 
 export default {
   name: 'RelatedArticles',
@@ -105,7 +106,6 @@ export default {
     const articles = ref([])
     const loading = ref(false)
     const visibleCount = ref(props.maxArticles)
-    const API_BASE = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '')
     
     const shortAuthor = (name) => {
       const n = typeof name === 'string' ? name : String(name || '')
@@ -117,7 +117,7 @@ export default {
     const fetchRelatedArticles = async () => {
       loading.value = true
       try {
-        const response = await fetch(`${API_BASE}/api/articles/${props.currentArticleId}/related?limit=10`)
+        const response = await apiFetch(`/api/articles/${props.currentArticleId}/related?limit=10`)
         const result = await response.json()
         
         if (result.success) {

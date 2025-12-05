@@ -75,6 +75,7 @@
 import { ref, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
+import { apiFetch } from '../composables/useApi'
 
 export default {
   name: 'AuthModal',
@@ -119,7 +120,7 @@ export default {
       }
       submitting.value = true
       try {
-        const res = await fetch(`${API_BASE}/api/auth/login`, {
+        const res = await apiFetch('/api/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id: loginForm.value.id, password: loginForm.value.password })
@@ -166,7 +167,7 @@ export default {
       }
       submitting.value = true
       try {
-        const res = await fetch(`${API_BASE}/api/auth/register`, {
+        const res = await apiFetch('/api/auth/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id: f.id, nickname: f.nickname, password: f.password })

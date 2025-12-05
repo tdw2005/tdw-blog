@@ -130,6 +130,7 @@
 <script>
 import { ref, reactive, onMounted, computed, watch } from 'vue'
 import { useAuth } from '../composables/useAuth'
+import { apiFetch } from '../composables/useApi'
 
 export default {
   name: 'AIWritingAssistant',
@@ -164,7 +165,7 @@ export default {
     // 检查 AI 服务状态
     const checkAIStatus = async () => {
       try {
-        const response = await fetch(`${API_BASE}/api/ai/status`)
+        const response = await apiFetch('/api/ai/status')
         const result = await response.json()
         if (result.success) {
           aiStatus.value = result.data
@@ -182,7 +183,7 @@ export default {
 
       loading.suggestions = true
       try {
-        const response = await fetch(`${API_BASE}/api/ai/writing-suggestions`, {
+        const response = await apiFetch('/api/ai/writing-suggestions', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -214,7 +215,7 @@ export default {
 
       loading.article = true
       try {
-        const response = await fetch(`${API_BASE}/api/ai/generate-article`, {
+        const response = await apiFetch('/api/ai/generate-article', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -247,7 +248,7 @@ export default {
 
       loading.excerpt = true
       try {
-        const response = await fetch(`${API_BASE}/api/ai/generate-excerpt`, {
+        const response = await apiFetch('/api/ai/generate-excerpt', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

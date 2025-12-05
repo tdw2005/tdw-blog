@@ -207,6 +207,7 @@
 
 <script>
 import { ref, reactive, computed, watch, onMounted } from 'vue'
+import { apiFetch } from '../composables/useApi'
 
 export default {
   name: 'ArticleExport',
@@ -812,9 +813,7 @@ ${article.tags && article.tags.length > 0 ? `tags: [${article.tags.map(tag => `"
         includeStats: String(pdfSettings.includeStats)
       })
 
-      const res = await fetch(`${API_BASE}/api/articles/${props.article.id}/export/pdf?${params.toString()}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` }
-      })
+      const res = await apiFetch(`/api/articles/${props.article.id}/export/pdf?${params.toString()}`)
       if (!res.ok) throw new Error('服务器生成PDF失败')
       exportProgress.value = '创建文件...'
       const blob = await res.blob()

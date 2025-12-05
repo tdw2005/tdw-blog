@@ -71,6 +71,7 @@
 import { ref, onMounted, watch, inject } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
+import { apiFetch } from '../composables/useApi'
 
 export default {
   name: 'Drafts',
@@ -84,8 +85,6 @@ export default {
     const batchMode = ref(false)
     const selectedDrafts = ref([])
 
-    const token = () => localStorage.getItem('token') || ''
-    const API_BASE = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '')
 
     const injected = inject('initialData', null)
     const checkSSRData = () => {
@@ -106,7 +105,7 @@ export default {
       loading.value = true
       try {
         const params = new URLSearchParams({ page: String(page), limit: String(pagination.value.limit), scope: (isAdmin.value && showAll.value) ? 'all' : 'mine' })
-        const res = await fetch(`${API_BASE}/api/drafts?${params.toString()}`, { headers: { Authorization: `Bearer ${token()}` } })
+        const res = await apiFetch(`/api/drafts?${params.toString()}`)
         const result = await res.json()
         if (result.success) {
           drafts.value = result.data.drafts || []
@@ -124,7 +123,7 @@ export default {
     const publish = async (id) => {
       if (!isLoggedIn.value) { openAuthModal('prompt'); return }
       try {
-        const res = await fetch(`${API_BASE}/api/drafts/${id}/publish`, { method: 'PUT', headers: { Authorization: `Bearer ${token()}` } })
+        const res = await apiFetch(`/api/drafts/${id}/publish`, { method: 'PUT' })
         const r = await res.json()
         if (r.success) { alert('发布成功'); fetchDrafts(pagination.value.page) } else { alert(r.message || '发布失败') }
       } catch (e) { alert('发布失败，请重试') }
@@ -135,10 +134,7 @@ export default {
       const name = title || '未命名草稿'
       if (!confirm(`确定要删除草稿《${name}》吗？此操作不可恢复！`)) return
       try {
-        const res = await fetch(`${API_BASE}/api/articles/${id}`, {
-          method: 'DELETE',
-          headers: { Authorization: `Bearer ${token()}` }
-        })
+        const res = await apiFetch(`/api/articles/${id}`, { method: 'DELETE' })
         const result = await res.json()
         if (result.success) {
           alert('草稿删除成功！')
@@ -168,10 +164,10 @@ export default {
       if (selectedDrafts.value.length === 0) { alert('请先选择要删除的草稿'); return }
       if (!confirm(`确定要删除选中的 ${selectedDrafts.value.length} 条草稿吗？此操作不可恢复！`)) return
       try {
-        const endpoint = (isAdmin.value && showAll.value) ? `${API_BASE}/api/articles/batch-delete` : `${API_BASE}/api/drafts/batch-delete`
-        const res = await fetch(endpoint, {
+        const endpoint = (isAdmin.value && showAll.value) ? '/api/articles/batch-delete' : '/api/drafts/batch-delete'
+        const res = await apiFetch(endpoint, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ ids: selectedDrafts.value })
         })
         const result = await res.json()

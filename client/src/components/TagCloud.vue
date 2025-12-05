@@ -22,6 +22,7 @@
 <script>
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
+import { apiFetch } from '../composables/useApi'
 
 export default {
   name: 'TagCloud',
@@ -34,11 +35,10 @@ export default {
   setup(props) {
     const router = useRouter()
     const tags = ref([])
-    const API_BASE = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '')
 
     const fetchTags = async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/tags`)
+        const res = await apiFetch('/api/tags')
         const data = await res.json()
         if (data && data.success && data.data && Array.isArray(data.data.tags) && data.data.tags.length > 0) {
           const max = data.data.tags.reduce((mx, x) => x.count > mx ? x.count : mx, 1)
