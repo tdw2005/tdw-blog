@@ -76,7 +76,8 @@ const corsOptions = {
   exposedHeaders: ['ETag']
 };
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
+// Express 5 使用 path-to-regexp v8，裸 '*' 不再合法；改用正则匹配所有路径处理预检
+app.options(/.*/, cors(corsOptions));
 app.use((req, res, next) => {
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('X-Frame-Options', 'SAMEORIGIN');
