@@ -1,5 +1,4 @@
 const jwt = require('jsonwebtoken');
-const puppeteer = require('puppeteer');
 const { generateETag } = require('../utils/etag');
 
 function registerArticleRoutes(app, { pool, JWT_SECRET, authenticateJWT, withFallback, cacheMiddleware, clearRelatedCaches, setArticleTags }) {
@@ -348,6 +347,8 @@ function registerArticleRoutes(app, { pool, JWT_SECRET, authenticateJWT, withFal
       </div>
     </body>
     </html>`;
+    let puppeteer;
+    try { puppeteer = (await import('puppeteer')).default; } catch (e) { return res.status(501).json({ success: false, message: '导出功能不可用' }); }
     const browser = await puppeteer.launch({ args: ['--no-sandbox'] });
     try {
       const page = await browser.newPage();

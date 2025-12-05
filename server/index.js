@@ -1,6 +1,5 @@
 require('dotenv').config();
 const express = require('express');
-const puppeteer = require('puppeteer');
 const mysql = require('mysql2/promise');
 const cors = require('cors');
 const path = require('path');
