@@ -2,12 +2,11 @@
  * 服务端降级工具函数
  */
 
-// 数据库健康检查
+// 数据库健康检查（快速返回，避免请求长时间挂起）
 const checkDatabaseHealth = async (pool) => {
     try {
-        const connection = await pool.getConnection();
-        await connection.execute('SELECT 1');
-        connection.release();
+        // 使用查询超时，避免在数据库不可用时长时间等待
+        await pool.execute({ sql: 'SELECT 1', timeout: 1000 });
         return true;
     } catch (error) {
         console.error(' Database health check failed:', error);
