@@ -1424,4 +1424,3 @@ ${article.tags && article.tags.length > 0 ? `tags: [${article.tags.map(tag => `"
   color: #e9ecef;
 }
 </style>
-    const API_BASE = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '')

@@ -120,7 +120,7 @@ function registerSSRRoutes(app, { pool, JWT_SECRET, withFallback }) {
     } catch (error) {
       await sendSSRHtml(req, res);
     }
-  }));
+  }, { allowFallback: false }));
 
   app.get('/article/:id', withFallback(async (req, res) => {
     try {
@@ -141,12 +141,12 @@ function registerSSRRoutes(app, { pool, JWT_SECRET, withFallback }) {
     } catch (error) {
       await sendSSRHtml(req, res);
     }
-  }));
+  }, { allowFallback: false }));
 
   app.get('/create', withFallback(async (req, res) => {
     const initialData = { route: '/create' };
     await sendSSRHtml(req, res, initialData);
-  }));
+  }, { allowFallback: false }));
 
   app.get('/edit/:id', withFallback(async (req, res) => {
     try {
@@ -162,15 +162,15 @@ function registerSSRRoutes(app, { pool, JWT_SECRET, withFallback }) {
     } catch (error) {
       await sendSSRHtml(req, res);
     }
-  }));
+  }, { allowFallback: false }));
 
   app.get('/login', withFallback(async (req, res) => {
     await sendSSRHtml(req, res, { route: '/login' });
-  }));
+  }, { allowFallback: false }));
 
   app.get('/register', withFallback(async (req, res) => {
     await sendSSRHtml(req, res, { route: '/register' });
-  }));
+  }, { allowFallback: false }));
 
   app.get('/profile', withFallback(async (req, res) => {
     try {
@@ -219,7 +219,7 @@ function registerSSRRoutes(app, { pool, JWT_SECRET, withFallback }) {
     } catch (error) {
       await sendSSRHtml(req, res, { route: '/profile' });
     }
-  }));
+  }, { allowFallback: false }));
 
   app.get('/drafts', withFallback(async (req, res) => {
     try {
@@ -249,7 +249,7 @@ function registerSSRRoutes(app, { pool, JWT_SECRET, withFallback }) {
     } catch (error) {
       await sendSSRHtml(req, res, { route: '/drafts' });
     }
-  }));
+  }, { allowFallback: false }));
 
   app.get('/messages', withFallback(async (req, res) => {
     try {
@@ -291,7 +291,7 @@ function registerSSRRoutes(app, { pool, JWT_SECRET, withFallback }) {
     } catch (error) {
       await sendSSRHtml(req, res, { route: '/messages' });
     }
-  }));
+  }, { allowFallback: false }));
 
   app.use(async (req, res) => {
     if (req.path.startsWith('/api')) {

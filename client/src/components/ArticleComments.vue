@@ -901,7 +901,6 @@ export default {
     padding: 1rem;
   }
 }
-</style>
 .comment-item.highlight-blink, .reply-item.highlight-blink { animation: blink-highlight 0.8s ease-in-out 2; }
 @keyframes blink-highlight { 0% { background-color: rgba(255, 230, 150, 0.4); } 50% { background-color: rgba(255, 230, 150, 0.0); } 100% { background-color: rgba(255, 230, 150, 0.4); } }
-    const API_BASE = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '')
+</style>

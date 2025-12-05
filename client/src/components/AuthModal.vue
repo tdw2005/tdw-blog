@@ -217,4 +217,3 @@ export default {
 .success-subtitle { color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.15rem; }
 .success-icon { font-size: 1.1rem; }
 </style>
-    const API_BASE = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '')
