@@ -413,6 +413,8 @@ export default {
           const successMessage = isEditMode.value ? (form.status === 'draft' ? '文章发布成功！' : '文章更新成功！') : '文章发布成功！'
           alert(successMessage)
           window.dispatchEvent(new Event('tags-refresh'))
+          window.dispatchEvent(new Event('articles-refresh'))
+          try { window.dispatchEvent(new Event('drafts-refresh')) } catch {}
           
           // 跳转到文章详情页
           const targetId = result.data?.id || articleId.value
@@ -461,6 +463,7 @@ export default {
 
         if (result.success) {
           alert('草稿保存成功！')
+          try { window.dispatchEvent(new Event('drafts-refresh')) } catch {}
           router.push('/')
         } else {
           alert('保存失败: ' + result.message)
@@ -500,6 +503,7 @@ export default {
 
         if (result.success) {
           alert('草稿更新成功！')
+          try { window.dispatchEvent(new Event('drafts-refresh')) } catch {}
           router.push('/drafts')
         } else {
           alert('更新失败: ' + result.message)

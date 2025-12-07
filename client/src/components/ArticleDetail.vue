@@ -267,6 +267,7 @@ export default {
         if (result.success) {
           alert('文章删除成功！')
           window.dispatchEvent(new Event('tags-refresh'))
+          window.dispatchEvent(new Event('articles-refresh'))
           router.push('/')
         } else {
           alert('删除失败: ' + result.message)
@@ -296,6 +297,7 @@ export default {
         if (result.success) {
           article.value.like_count = result.data.like_count
           article.value.liked_by_current_user = result.data.liked
+          try { window.dispatchEvent(new Event('articles-refresh')) } catch {}
         }
       } catch (e) {}
     }

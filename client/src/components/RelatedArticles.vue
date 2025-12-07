@@ -81,7 +81,7 @@
 </template>
 
 <script>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 export default {
@@ -192,8 +192,18 @@ export default {
       router.push(`/?search=${encodeURIComponent(tag)}&searchType=tags`)
     }
     
+    const handleArticlesRefresh = () => {
+      fetchRelatedArticles()
+      visibleCount.value = props.maxArticles
+    }
+
     onMounted(() => {
       fetchRelatedArticles()
+      window.addEventListener('articles-refresh', handleArticlesRefresh)
+    })
+
+    onBeforeUnmount(() => {
+      window.removeEventListener('articles-refresh', handleArticlesRefresh)
     })
     
     // 监听当前文章ID变化

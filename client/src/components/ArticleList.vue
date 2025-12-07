@@ -282,7 +282,7 @@
 </template>
 
 <script>
-import { ref, onMounted, watch, computed, inject } from 'vue'
+import { ref, onMounted, onBeforeUnmount, watch, computed, inject } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import TagCloud from './TagCloud.vue'
 import { useAuth } from '../composables/useAuth'
@@ -666,12 +666,17 @@ export default {
     }
 }
 
+    const handleArticlesRefresh = () => { fetchArticles(pagination.value.page || 1) }
+
     onMounted(() => {
       const page = parseInt(route.query.page) || 1
-      if (articles.value.length === 0) {
-        fetchArticles(page)
-      }
+      fetchArticles(page)
       fetchGlobalTags()
+      window.addEventListener('articles-refresh', handleArticlesRefresh)
+    })
+
+    onBeforeUnmount(() => {
+      window.removeEventListener('articles-refresh', handleArticlesRefresh)
     })
 
     watch(() => route.query.page, (newPage) => {

@@ -85,7 +85,7 @@
 </template>
 
 <script>
-import { ref, onMounted, inject } from 'vue'
+import { ref, onMounted, onBeforeUnmount, inject } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
 
@@ -124,40 +124,53 @@ export default {
       return false
     }
 
-    onMounted(async () => {
-      const hasSSR = checkSSRData()
-      if (hasSSR) return
+    const fetchMyProfile = async () => {
       try {
-        const res = await fetch('/api/auth/me', {
-          headers: { Authorization: `Bearer ${token()}` }
-        })
+        const res = await fetch('/api/auth/me', { headers: { Authorization: `Bearer ${token()}` } })
         const result = await res.json()
-        if (result.success) {
-          nickname.value = result.data.nickname || ''
-          meUserId.value = result.data.user_id || ''
-        }
+        if (result.success) { nickname.value = result.data.nickname || ''; meUserId.value = result.data.user_id || '' }
       } catch (e) {}
+    }
 
+    const fetchMyArticles = async () => {
+      loadingArticles.value = true
       try {
         const authorId = meUserId.value || (user.value?.user_id || '')
         const qs = new URLSearchParams({ page: '1', limit: '10', author: authorId })
         const res2 = await fetch(`/api/articles?${qs.toString()}`)
         const r2 = await res2.json()
-        if (r2.success) {
-          myArticles.value = r2.data?.articles || []
-        }
+        if (r2.success) { myArticles.value = r2.data?.articles || [] }
       } catch (e) {}
       finally { loadingArticles.value = false }
+    }
 
+    const fetchMyDrafts = async () => {
+      loadingDrafts.value = true
       try {
         const qs3 = new URLSearchParams({ page: '1', limit: '10', scope: 'mine' })
         const res3 = await fetch(`/api/drafts?${qs3.toString()}`, { headers: { Authorization: `Bearer ${token()}` } })
         const r3 = await res3.json()
-        if (r3.success) {
-          myDrafts.value = r3.data?.drafts || []
-        }
+        if (r3.success) { myDrafts.value = r3.data?.drafts || [] }
       } catch (e) {}
       finally { loadingDrafts.value = false }
+    }
+
+    const handleArticlesRefresh = () => { fetchMyArticles(); fetchMyDrafts() }
+    const handleDraftsRefresh = () => { fetchMyDrafts() }
+
+    onMounted(async () => {
+      const hasSSR = checkSSRData()
+      if (hasSSR) return
+      await fetchMyProfile()
+      await fetchMyArticles()
+      await fetchMyDrafts()
+      window.addEventListener('articles-refresh', handleArticlesRefresh)
+      window.addEventListener('drafts-refresh', handleDraftsRefresh)
+    })
+
+    onBeforeUnmount(() => { 
+      window.removeEventListener('articles-refresh', handleArticlesRefresh)
+      window.removeEventListener('drafts-refresh', handleDraftsRefresh)
     })
 
     const updateNickname = async () => {

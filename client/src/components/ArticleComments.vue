@@ -358,6 +358,7 @@ export default {
         if (result.success) {
           form.value = { content: '' }
           fetchComments(1)
+          try { window.dispatchEvent(new Event('articles-refresh')) } catch {}
         } else {
           alert('评论发表失败: ' + result.message)
         }
@@ -515,6 +516,7 @@ export default {
             }
           }
           alert('已删除')
+          try { window.dispatchEvent(new Event('articles-refresh')) } catch {}
         } else {
           alert(result.message || '删除失败')
         }

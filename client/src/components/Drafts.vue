@@ -68,7 +68,7 @@
 </template>
 
 <script>
-import { ref, onMounted, watch, inject } from 'vue'
+import { ref, onMounted, onBeforeUnmount, watch, inject } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
 
@@ -125,7 +125,12 @@ export default {
       try {
         const res = await fetch(`/api/drafts/${id}/publish`, { method: 'PUT', headers: { Authorization: `Bearer ${token()}` } })
         const r = await res.json()
-        if (r.success) { alert('发布成功'); fetchDrafts(pagination.value.page) } else { alert(r.message || '发布失败') }
+        if (r.success) { 
+          alert('发布成功'); 
+          fetchDrafts(pagination.value.page); 
+          try { window.dispatchEvent(new Event('articles-refresh')) } catch {}
+          try { window.dispatchEvent(new Event('drafts-refresh')) } catch {}
+        } else { alert(r.message || '发布失败') }
       } catch (e) { alert('发布失败，请重试') }
     }
 
@@ -179,6 +184,7 @@ export default {
           batchMode.value = false
           selectedDrafts.value = []
           fetchDrafts(pagination.value.page)
+          try { window.dispatchEvent(new Event('drafts-refresh')) } catch {}
         } else {
           alert(result.message || '批量删除失败，请重试')
         }
@@ -189,7 +195,9 @@ export default {
 
     const formatDate = (d) => { return new Date(d).toLocaleString() }
 
-    onMounted(() => { const hasSSR = checkSSRData(); if (!hasSSR) { fetchDrafts(1) } })
+    const handleDraftsRefresh = () => { fetchDrafts(pagination.value.page || 1) }
+    onMounted(() => { const hasSSR = checkSSRData(); if (!hasSSR) { fetchDrafts(1) } window.addEventListener('drafts-refresh', handleDraftsRefresh) })
+    onBeforeUnmount(() => { window.removeEventListener('drafts-refresh', handleDraftsRefresh) })
     watch(showAll, () => fetchDrafts(1))
 
     return { drafts, loading, showAll, pagination, changePage, edit, publish, deleteDraft, batchMode, selectedDrafts, toggleBatchMode, toggleSelect, isSelected, batchDelete, isAdmin, isLoggedIn, formatDate }

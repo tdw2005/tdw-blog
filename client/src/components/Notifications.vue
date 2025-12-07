@@ -76,7 +76,7 @@
 </template>
 
 <script>
-import { ref, onMounted, computed, inject } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed, inject } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
 
@@ -289,7 +289,14 @@ export default {
       await Promise.all(tasks)
     }
 
-    onMounted(async () => { const hasSSR = checkSSRData(); if (!hasSSR) { await fetchNotifications(1) } await enrichNotifications(); await fetchUnreadByType() })
+    const handleArticlesRefresh = async () => {
+      await enrichNotifications()
+      await fetchUnread()
+      await fetchUnreadByType()
+    }
+
+    onMounted(async () => { const hasSSR = checkSSRData(); if (!hasSSR) { await fetchNotifications(1) } await enrichNotifications(); await fetchUnreadByType(); window.addEventListener('articles-refresh', handleArticlesRefresh) })
+    onBeforeUnmount(() => { window.removeEventListener('articles-refresh', handleArticlesRefresh) })
 
     const likeCommentFromNotif = async (n) => {
       const id = n.comment_id
