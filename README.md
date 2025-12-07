@@ -210,6 +210,8 @@
 - 数据库账号仅授予最小权限；备份与导入操作需严格控制管理员权限
 - 合理设置速率限制窗口与阈值，避免接口被暴力请求
 ## 难点与解决方案
+- 通过schema.sql注入数据时易因为中文内容而产生报错：
+  - 改为由server/db/init.js初始化数据库建立空表，进行操作后直接完成数据的CRUD。
 - SSR 数据注入与水合一致性：
   - 通过在服务端渲染时将首屏数据写入 `window.__INITIAL_DATA__`，客户端入口读取该变量并提供给组件（`client/src/main.js:8`）。
   - 详情页优先消费 SSR 数据并在无数据时回退到 API（`client/src/components/ArticleDetail.vue:143` 与 `client/src/components/ArticleDetail.vue:178`）。
