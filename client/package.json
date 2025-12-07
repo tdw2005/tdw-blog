@@ -1,0 +1,22 @@
+{
+  "name": "client",
+  "version": "2.2.5",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 3001 --strictPort",
+    "build": "vite build",
+    "build:ssr": "vite build --ssr src/entry-server.js --outDir dist/server",
+    "preview": "vite preview --port 3001"
+  },
+  "dependencies": {
+    "vue": "^3.3.0",
+    "@vue/server-renderer": "^3.3.0",
+    "vue-router": "^4.2.0",
+    "marked": "^15.0.7",
+    "dompurify": "^3.1.6"
+  },
+  "devDependencies": {
+    "vite": "^7.2.6",
+    "@vitejs/plugin-vue": "^6.0.2"
+  }
+}
